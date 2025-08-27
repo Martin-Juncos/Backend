@@ -1,40 +1,81 @@
-const {products} = require('../db/dataBase')
+const {
+  createproductController,
+  getAllproductsController,
+  getproductByNameController,
+  getOneproductController,
+  deleteproductController,
+  updeateproductController,
+} = require("../controllers/productControllers");
 
-const getAllproductHandler = (req, res) => {
-    const allproduct = products
-    res.send(allproduct)
-}
+const Joi = require("joi");
+
+const productSchema = Joi.object({
+  name: Joi.string().min(4).required(),
+  description: Joi.string().required(),
+  price: Joi.string().required(),
+});
+
+const getproductsHandler = (req, res) => {
+  const { name } = req.query;
+  try {
+    if (name) {
+      const productByName = getproductByNameController(name);
+      res.send(productByName);
+    } else {
+      const allproducts = getAllproductsController();
+      res.send(allproducts);
+    }
+  } catch (error) {
+    res.status(400).send({ error: "No hay productos" });
+  }
+};
 
 const getproductByIdHandler = (req, res) => {
-    const {id} = req.params
-    const productById = `Trae un producto con id: ${id}`
-    res.send(productById)
-}
+  try {
+    const { id } = req.params;
+    const productById = getOneproductController(id);
+    res.send(productById);
+  } catch (error) {
+    res.status(400).send({ error: "No se encontro el proucto" });
+  }
+};
 
-const createproductHandler = (req, res) => {
-    const {name, price} = req.body
-    const newproduct = `El nuevo producto es ${name} y su precio es $ ${price}`
-    res.send(newproduct)
-}
+const createproductHandler = async (req, res) => {
+  try {
+    const { error } = productSchema.validate(req.body);
+    if (error) {
+      res.status(400).send(error.details[0].message);
+    } else {
+      const { name, description, price } = req.body;
+      const newproduct = await createproductController(
+        name,
+        description,
+        price
+      );
+      res.status(201).send(newproduct);
+    }
+  } catch (error) {
+    res.status(500).send({ error: "Faltan datos del producto" });
+  }
+};
 
-const deleteproductHandler = (req, res) => {
-    const {id} = req.params
-    const deletedproduct = `Se elimino el producto con id ${id}`
-    res.send(deletedproduct)
-}
+const putproductHandler = (req, res) => {
+  const { name, description, price } = req.body;
+  const { id } = req.params;
+  const newproductData = updeateproductController(id, name, description, price);
+  res.send(newproductData);
+};
 
-const updateproductHandler = (req, res) => {
-    const {id} = req.params
-    const {name, price} = req.body
-    const updateproduct = `El producto con id ${id} cambio su nombre a ${name} y su precio es $ ${price} `
-    res.send(updateproduct)
-}
-
+const deletproductHandler = (req, res) => {
+  const { id } = req.params;
+  const deletedProduct = deleteproductController(id);
+  res.send(deletedProduct);
+};
 
 module.exports = {
-    getAllproductHandler,
-    getproductByIdHandler,
-    createproductHandler,
-    deleteproductHandler, 
-    updateproductHandler
-}
+  getproductsHandler,
+  getproductByIdHandler,
+  createproductHandler,
+  putproductHandler,
+  deletproductHandler,
+};
