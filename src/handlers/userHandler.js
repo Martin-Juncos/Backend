@@ -7,7 +7,11 @@ const {
   updeateUserController,
 } = require("../controllers/userControllers");
 
-const { users } = require("../db/dataBase");
+const createUserHandler = (req, res) => {
+  const { name, userName, email, password, role } = req.body;
+  const newUser = createUserController(name, userName, email, password, role)
+  res.send(newUser);
+};
 
 const getAllUserHandler = (req, res) => {
   const { name } = req.query;
@@ -24,12 +28,6 @@ const getUserByIdHandler = (req, res) => {
   const { id } = req.params;
   const userById = getUserByIdController(id);
   res.send(userById);
-};
-
-const createUserHandler = (req, res) => {
-  const { name, userName, email, password, role } = req.body;
-  const newUser = createUserController(name, userName, email, password, role)
-  res.send(newUser);
 };
 
 const deleteUserHandler = (req, res) => {
